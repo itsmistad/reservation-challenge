@@ -1,8 +1,8 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { CareProviderContext } from './CareProviderContext';
 import { getDefaultMockProviders } from './getDefaultMockProviders';
 import dayjs, { Dayjs } from 'dayjs';
-import { Provider, Reservation, ScheduleEntry } from './types';
+import { Reservation, ScheduleEntry } from './types';
 
 export const CareProviderProvider = ({ children }: React.PropsWithChildren<{}>) => {
     const [providers, setProviders] = useState(getDefaultMockProviders());
@@ -47,55 +47,56 @@ export const CareProviderProvider = ({ children }: React.PropsWithChildren<{}>) 
         });
     }, []);
 
-    const getAvailabilityWindows = useCallback(({ providerId, date }: { providerId: string; date: Dayjs }) => {
-        const provider = providers.find(({ id }) => id === providerId);
-        if (!provider) {
-            return [];
-        }
-
-        const { availability, reservations } = provider.schedule;
-
-        const dateAvailability = availability.find(
-            ({ startDate }) => startDate.format('YYYY-MM-DD') === date.format('YYYY-MM-DD'),
-        );
-        const dateReservations = reservations.filter(
-            ({ startDate }) => startDate.format('YYYY-MM-DD') === date.format('YYYY-MM-DD'),
-        );
-
-        // If there is no availability for the specified date, give an empty array of windows.
-        if (!dateAvailability) {
-            return [];
-        }
-
-        // If there are no reservations for the specified date, give the entire availability as the only window.
-        if (dateReservations.length === 0) {
-            return [dateAvailability];
-        }
-
-        // Otherwise, isolate the available windows for this date's total availability by skipping reserved slots.
-        let startDate = dateAvailability.startDate;
-        const windows: ScheduleEntry[] = [];
-        for (let i = 0; i < reservations.length; i++) {
-            const currentReservation = reservations[i];
-            if (Math.abs(startDate.diff(currentReservation.startDate)) >= 60 * 1000) {
-                windows.push({
-                    startDate,
-                    endDate: currentReservation.startDate,
-                });
+    const getAvailabilityWindows = useCallback(
+        ({ providerId, date }: { providerId: string; date: Dayjs }) => {
+            const provider = providers.find(({ id }) => id === providerId);
+            if (!provider) {
+                return [];
             }
-            startDate = currentReservation.endDate;
-            if (i === reservations.length - 1 && Math.abs(startDate.diff(dateAvailability.endDate)) >= 60 * 1000) {
-                windows.push({
-                    startDate,
-                    endDate: dateAvailability.endDate,
-                });
+
+            const { availability, reservations } = provider.schedule;
+
+            const dateAvailability = availability.find(
+                ({ startDate }) => startDate.format('YYYY-MM-DD') === date.format('YYYY-MM-DD'),
+            );
+            const dateReservations = reservations.filter(
+                ({ startDate }) => startDate.format('YYYY-MM-DD') === date.format('YYYY-MM-DD'),
+            );
+
+            // If there is no availability for the specified date, give an empty array of windows.
+            if (!dateAvailability) {
+                return [];
             }
-        }
 
-        console.log(windows);
+            // If there are no reservations for the specified date, give the entire availability as the only window.
+            if (dateReservations.length === 0) {
+                return [dateAvailability];
+            }
 
-        return windows;
-    }, []);
+            // Otherwise, isolate the available windows for this date's total availability by skipping reserved slots.
+            let startDate = dateAvailability.startDate;
+            const windows: ScheduleEntry[] = [];
+            for (let i = 0; i < reservations.length; i++) {
+                const currentReservation = reservations[i];
+                if (Math.abs(startDate.diff(currentReservation.startDate)) >= 60 * 1000) {
+                    windows.push({
+                        startDate,
+                        endDate: currentReservation.startDate,
+                    });
+                }
+                startDate = currentReservation.endDate;
+                if (i === reservations.length - 1 && Math.abs(startDate.diff(dateAvailability.endDate)) >= 60 * 1000) {
+                    windows.push({
+                        startDate,
+                        endDate: dateAvailability.endDate,
+                    });
+                }
+            }
+
+            return windows;
+        },
+        [providers],
+    );
 
     const getAvailableSlots = useCallback(
         ({ providerId, date, durationInMinutes }: { providerId: string; date: Dayjs; durationInMinutes: number }) => {
@@ -152,7 +153,7 @@ export const CareProviderProvider = ({ children }: React.PropsWithChildren<{}>) 
 
             return slotsAfter24Hours;
         },
-        [],
+        [providers, getAvailabilityWindows],
     );
 
     return (

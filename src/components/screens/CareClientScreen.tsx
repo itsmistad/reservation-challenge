@@ -1,15 +1,14 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker';
-import { MobileTimePicker } from '@mui/x-date-pickers/MobileTimePicker';
 import dayjs, { Dayjs } from 'dayjs';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useCareProviders } from '@providers/CareProvider';
-import { Provider, Reservation, ScheduleEntry } from '@providers/CareProvider/types';
+import { Reservation, ScheduleEntry } from '@providers/CareProvider/types';
 import { useCareClients } from '@providers/CareClient';
 import { Client } from '@providers/CareClient/types';
 import { mapScheduleEntry } from '@utilities/mapScheduleEntry';
@@ -42,14 +41,14 @@ export const CareClientScreen = () => {
                 durationInMinutes: SLOT_DURATION_IN_MINUTES,
             }),
         );
-    }, [currentClient?.id, currentClient?.primaryProviderId, date]);
+    }, [currentClient?.id, currentClient?.primaryProviderId, date, getAvailableSlots]);
 
     useEffect(() => {
         if (!currentClient?.id || !currentClient.primaryProviderId) {
             return;
         }
         setReservations(getClientReservationsByProvider(currentClient.id, currentClient.primaryProviderId));
-    }, [currentClient?.id]);
+    }, [currentClient?.id, currentClient?.primaryProviderId, getClientReservationsByProvider]);
 
     const onClientChange = useCallback(
         (event: SelectChangeEvent) => {
@@ -92,7 +91,15 @@ export const CareClientScreen = () => {
             }),
         );
         setIsConfirming(false);
-    }, [currentClient?.primaryProviderId, currentClient?.id, startDate, endDate, date]);
+    }, [
+        currentClient,
+        startDate,
+        endDate,
+        date,
+        getAvailableSlots,
+        getClientReservationsByProvider,
+        addProviderReservation,
+    ]);
 
     const onCancel = useCallback(() => {
         setIsConfirming(false);

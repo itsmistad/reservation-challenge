@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker';
@@ -9,7 +9,7 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import { useCareProviders } from '@providers/CareProvider';
-import { Provider, ScheduleEntry } from '@providers/CareProvider/types';
+import { Provider } from '@providers/CareProvider/types';
 import { mapScheduleEntry } from '@utilities/mapScheduleEntry';
 
 export const CareProviderScreen = () => {
@@ -31,7 +31,7 @@ export const CareProviderScreen = () => {
         setDate(null);
         setStartTime(null);
         setEndTime(null);
-    }, [date, startTime, endTime]);
+    }, [date, startTime, endTime, addAvailability, currentProvider]);
 
     const onProviderChange = useCallback(
         (event: SelectChangeEvent) => {

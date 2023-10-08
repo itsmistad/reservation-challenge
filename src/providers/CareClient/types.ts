@@ -1,4 +1,4 @@
-import { Reservation, ScheduleEntry } from '@providers/CareProvider/types';
+import { Reservation } from '@providers/CareProvider/types';
 
 export type Client = {
     id: string;

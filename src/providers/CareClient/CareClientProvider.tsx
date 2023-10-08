@@ -5,17 +5,20 @@ import { useCareProviders } from '@providers/CareProvider';
 
 export const CareClientProvider = ({ children }: React.PropsWithChildren<{}>) => {
     const { providers } = useCareProviders();
-    const clients = useMemo(() => (providers?.length ? getDefaultMockClients(providers?.[0].id) : []), []);
+    const clients = useMemo(() => (providers?.length ? getDefaultMockClients(providers?.[0].id) : []), [providers]);
 
-    const getClientReservationsByProvider = useCallback((clientId: string, providerId: string) => {
-        const provider = providers?.find(({ id }) => id === providerId);
-        if (!provider) {
-            return [];
-        }
+    const getClientReservationsByProvider = useCallback(
+        (clientId: string, providerId: string) => {
+            const provider = providers?.find(({ id }) => id === providerId);
+            if (!provider) {
+                return [];
+            }
 
-        const reservations = provider.schedule.reservations.filter((entry) => entry.clientId === clientId);
-        return reservations;
-    }, []);
+            const reservations = provider.schedule.reservations.filter((entry) => entry.clientId === clientId);
+            return reservations;
+        },
+        [providers],
+    );
 
     return (
         <CareClientContext.Provider
