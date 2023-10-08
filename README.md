@@ -1,5 +1,3 @@
-<!-- HEADER -->
-
 # `reservation-challenge`
 
 An example solution for the front-end "Reservation" challenge.
@@ -12,8 +10,6 @@ An example solution for the front-end "Reservation" challenge.
 > -   Allows clients to list available slots.
 > -   Allows clients to reserve an available slot.
 > -   Allows clients to confirm their reservation.
-
-<!-- CONTENT -->
 
 ## 🏃‍♂️ Getting Started
 
@@ -70,3 +66,12 @@ It correctly bundles React in production mode and optimizes the build for the be
 
 The build is minified and the filenames include the hashes.
 Your app is ready to be deployed!
+
+## 🤔 Reflections
+
+There are many things I opted out of for the sake of time:
+
+1. React Native — setup and testing would take up the majority of the time.
+2. Next.js — the focus of the challenge doesn't necessarily warrant the useful (though heavy) route/screen handling that Next provides.
+3. Apollo/GraphQL integration _with_ interception, caching, or response mocking — would be amazing to use this here due to the ability to plug-and-play a _real_ API, but this isn't feasible in the limited time frame.
+4. Jotai — data management with Jotai feels a lot more lightweight than Redux or React Contexts.
