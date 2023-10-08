@@ -1,0 +1,16 @@
+{
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "prettier.configPath": ".prettierrc.js",
+    "editor.formatOnSave": true,
+    "workbench.colorCustomizations": {
+        "titleBar.activeBackground": "#429bcf",
+        "titleBar.inactiveBackground": "#30607c",
+        "activityBar.background": "#429bcf83",
+        "titleBar.activeForeground": "#fff",
+        "titleBar.inactiveForeground": "#fff"
+    },
+    "files.exclude": {
+        "**/node_modules": true
+    },
+    "typescript.tsdk": "node_modules/typescript/lib"
+}
