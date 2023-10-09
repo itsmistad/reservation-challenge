@@ -16,8 +16,8 @@ export const CareProviderScreen = () => {
     const { providers, addAvailability } = useCareProviders();
     const [currentProvider, setCurrentProvider] = useState<Provider | null>(null);
     const [date, setDate] = useState<Dayjs | null>(dayjs());
-    const [startTime, setStartTime] = useState<Dayjs | null>(dayjs());
-    const [endTime, setEndTime] = useState<Dayjs | null>(dayjs());
+    const [startTime, setStartTime] = useState<Dayjs | null>(dayjs().hour(9).minute(0));
+    const [endTime, setEndTime] = useState<Dayjs | null>(dayjs().hour(17).minute(0));
 
     const onSubmit = useCallback(() => {
         if (!currentProvider || !date || !startTime || !endTime) {
@@ -47,7 +47,7 @@ export const CareProviderScreen = () => {
     );
 
     return (
-        <Stack spacing={2} width={600}>
+        <Stack spacing={2} width={340}>
             <FormControl>
                 <InputLabel id="care-provider-select-label">Care Provider</InputLabel>
                 <Select
@@ -70,7 +70,7 @@ export const CareProviderScreen = () => {
                 label="Date"
                 openTo="day"
                 views={['day']}
-                defaultValue={dayjs()}
+                value={date}
                 format="YYYY-MM-DD"
                 onChange={(value) => setDate(value)}
             />
@@ -79,7 +79,7 @@ export const CareProviderScreen = () => {
                 label="Start"
                 openTo="hours"
                 views={['hours', 'minutes']}
-                defaultValue={dayjs().hour(9).minute(0)}
+                value={startTime}
                 onChange={(value) => setStartTime(value)}
             />
             <MobileTimePicker
@@ -87,7 +87,7 @@ export const CareProviderScreen = () => {
                 label="End"
                 openTo="hours"
                 views={['hours', 'minutes']}
-                defaultValue={dayjs().hour(17).minute(0)}
+                value={endTime}
                 onChange={(value) => setEndTime(value)}
             />
             <Button variant="contained" onClick={onSubmit} disabled={!currentProvider}>
