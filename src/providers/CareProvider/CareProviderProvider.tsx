@@ -3,6 +3,7 @@ import { CareProviderContext } from './CareProviderContext';
 import { getDefaultMockProviders } from './getDefaultMockProviders';
 import dayjs, { Dayjs } from 'dayjs';
 import { Reservation, ScheduleEntry } from './types';
+import { sortScheduleEntries } from '@utilities/sortScheduleEntries';
 
 export const CareProviderProvider = ({ children }: React.PropsWithChildren<{}>) => {
     const [providers, setProviders] = useState(getDefaultMockProviders());
@@ -18,11 +19,7 @@ export const CareProviderProvider = ({ children }: React.PropsWithChildren<{}>) 
             }
 
             targetProvider.schedule.availability.push(entry);
-            targetProvider.schedule.availability.sort((a, b) => {
-                const firstStartTime = a.startDate;
-                const secondStartTime = b.endDate;
-                return firstStartTime.diff(secondStartTime);
-            });
+            targetProvider.schedule.availability.sort(sortScheduleEntries);
 
             return [targetProvider, ...previous.filter(({ id }) => id !== providerId)];
         });
@@ -37,11 +34,7 @@ export const CareProviderProvider = ({ children }: React.PropsWithChildren<{}>) 
             }
 
             targetProvider.schedule.reservations.push(reservation);
-            targetProvider.schedule.availability.sort((a, b) => {
-                const firstStartTime = a.startDate;
-                const secondStartTime = b.endDate;
-                return firstStartTime.diff(secondStartTime);
-            });
+            targetProvider.schedule.reservations.sort(sortScheduleEntries);
 
             return [targetProvider, ...previous.filter(({ id }) => id !== providerId)];
         });
@@ -56,40 +49,70 @@ export const CareProviderProvider = ({ children }: React.PropsWithChildren<{}>) 
 
             const { availability, reservations } = provider.schedule;
 
-            const dateAvailability = availability.find(
+            const targetDateAvailability = availability.filter(
                 ({ startDate }) => startDate.format('YYYY-MM-DD') === date.format('YYYY-MM-DD'),
             );
-            const dateReservations = reservations.filter(
+            const targetDateReservations = reservations.filter(
                 ({ startDate }) => startDate.format('YYYY-MM-DD') === date.format('YYYY-MM-DD'),
             );
 
             // If there is no availability for the specified date, give an empty array of windows.
-            if (!dateAvailability) {
+            if (!targetDateAvailability) {
                 return [];
             }
 
             // If there are no reservations for the specified date, give the entire availability as the only window.
-            if (dateReservations.length === 0) {
-                return [dateAvailability];
+            if (targetDateReservations.length === 0) {
+                return [...targetDateAvailability];
             }
 
             // Otherwise, isolate the available windows for this date's total availability by skipping reserved slots.
-            let startDate = dateAvailability.startDate;
             const windows: ScheduleEntry[] = [];
-            for (let i = 0; i < reservations.length; i++) {
-                const currentReservation = reservations[i];
-                if (Math.abs(startDate.diff(currentReservation.startDate)) >= 60 * 1000) {
+            for (let availabilityIndex = 0; availabilityIndex < targetDateAvailability.length; availabilityIndex++) {
+                let availabilityStartDate = targetDateAvailability[availabilityIndex].startDate
+                        .second(0)
+                        .millisecond(0),
+                    availabilityEndDate = targetDateAvailability[availabilityIndex].endDate.second(0).millisecond(0);
+                const reservationsWithinAvailability = reservations.filter(
+                    ({ startDate, endDate }) =>
+                        (startDate.isSame(availabilityStartDate) || startDate.isAfter(availabilityStartDate)) &&
+                        (endDate.isSame(availabilityEndDate) || endDate.isBefore(availabilityEndDate)),
+                );
+
+                if (reservationsWithinAvailability.length === 0) {
                     windows.push({
-                        startDate,
-                        endDate: currentReservation.startDate,
+                        startDate: availabilityStartDate,
+                        endDate: availabilityEndDate,
                     });
+                    continue;
                 }
-                startDate = currentReservation.endDate;
-                if (i === reservations.length - 1 && Math.abs(startDate.diff(dateAvailability.endDate)) >= 60 * 1000) {
-                    windows.push({
-                        startDate,
-                        endDate: dateAvailability.endDate,
-                    });
+
+                for (
+                    let reservationIndex = 0;
+                    reservationIndex < reservationsWithinAvailability.length;
+                    reservationIndex++
+                ) {
+                    const currentReservation = reservationsWithinAvailability[reservationIndex];
+                    const preceedingWindowHasValidDuration =
+                        Math.abs(availabilityStartDate.diff(currentReservation.startDate)) >= 60 * 1000;
+                    if (preceedingWindowHasValidDuration) {
+                        windows.push({
+                            startDate: availabilityStartDate,
+                            endDate: currentReservation.startDate,
+                        });
+                    }
+
+                    availabilityStartDate = currentReservation.endDate;
+
+                    const isLastReservation = reservationIndex === reservationsWithinAvailability.length - 1;
+                    const proceedingWindowHasValidDuration =
+                        Math.abs(availabilityStartDate.diff(availabilityEndDate)) >= 60 * 1000;
+                    if (isLastReservation && proceedingWindowHasValidDuration) {
+                        windows.push({
+                            startDate: availabilityStartDate,
+                            endDate: availabilityEndDate,
+                        });
+                    }
                 }
             }
 
@@ -113,7 +136,7 @@ export const CareProviderProvider = ({ children }: React.PropsWithChildren<{}>) 
 
             const slots: ScheduleEntry[] = [];
 
-            const getStartDate = (offsetInMinutes?: number) => {
+            const getStartDate = (windowIndex: number, offsetInMinutes?: number) => {
                 let startDate = availabilityWindows[windowIndex].startDate.second(0).millisecond(0);
                 if (offsetInMinutes) {
                     startDate = startDate.add(offsetInMinutes, 'minutes');
@@ -121,30 +144,24 @@ export const CareProviderProvider = ({ children }: React.PropsWithChildren<{}>) 
                 return startDate;
             };
 
-            let windowIndex = 0,
-                slotIndexInWindow = 0,
-                currentStartDate: Dayjs = getStartDate();
+            for (let windowIndex = 0; windowIndex < availabilityWindows.length; windowIndex++) {
+                let slotIndexInWindow = 0,
+                    slotStartDate: Dayjs = getStartDate(windowIndex);
 
-            const endOfAvailiability = availabilityWindows[availabilityWindows.length - 1].endDate
-                .second(0)
-                .millisecond(0);
+                const windowEndDate = availabilityWindows[windowIndex].endDate.second(0).millisecond(0);
 
-            while (currentStartDate.isBefore(endOfAvailiability)) {
-                const endDate = currentStartDate.add(durationInMinutes, 'minutes');
-                if (endDate.isAfter(availabilityWindows[windowIndex].endDate)) {
-                    if (windowIndex + 1 === availabilityWindows.length) {
+                while (slotStartDate.isBefore(windowEndDate)) {
+                    const slotEndDate = slotStartDate.add(durationInMinutes, 'minutes');
+                    if (slotEndDate.isAfter(windowEndDate)) {
                         break;
                     }
-                    windowIndex++;
-                    currentStartDate = getStartDate();
-                    continue;
+                    slots.push({
+                        startDate: slotStartDate,
+                        endDate: slotEndDate,
+                    });
+                    slotIndexInWindow++;
+                    slotStartDate = getStartDate(windowIndex, 15 * slotIndexInWindow);
                 }
-                slots.push({
-                    startDate: currentStartDate,
-                    endDate,
-                });
-                slotIndexInWindow++;
-                currentStartDate = getStartDate(15 * slotIndexInWindow);
             }
 
             const slotsAfter24Hours = slots.filter(
