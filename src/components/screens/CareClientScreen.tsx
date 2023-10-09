@@ -110,7 +110,7 @@ export const CareClientScreen = () => {
     }, []);
 
     return (
-        <Stack spacing={2} width={600}>
+        <Stack spacing={2} width={340}>
             <FormControl>
                 <InputLabel id="care-client-select-label">Care Client</InputLabel>
                 <Select

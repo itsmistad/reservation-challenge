@@ -4,7 +4,7 @@ export const mapScheduleEntry = (entry: ScheduleEntry, i: number) => {
     const formattedStartTime = entry.startDate.format('h:mm A');
     const formattedEndTime = entry.endDate.format('h:mm A');
     return (
-        <p key={i}>
+        <p key={i} style={{ textAlign: 'left' }}>
             {entry.startDate.format('MMMM D, YYYY')} from {formattedStartTime} to {formattedEndTime}
         </p>
     );
