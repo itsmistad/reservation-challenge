@@ -75,3 +75,9 @@ There are many things I opted out of for the sake of time:
 2. Next.js — the focus of the challenge doesn't necessarily warrant the useful (though heavy) route/screen handling that Next provides.
 3. Apollo/GraphQL integration _with_ interception, caching, or response mocking — would be amazing to use this here due to the ability to plug-and-play a _real_ API, but this isn't feasible in the limited time frame.
 4. Jotai — data management with Jotai feels a lot more lightweight than Redux or React Contexts.
+
+## 🗒️ Notes for the Reviewer
+
+I submitted 5 additional PRs after official submission to showcase how I approach minimizing changeset size in my PRs and keeping them clean with additional features and fixes.
+
+I also added support for multiple windows in one day. Although this is not a part of the original requirements, this is to contribute an "extra factor".
