@@ -22,7 +22,7 @@ export const CareClientScreen = () => {
     const [currentClient, setCurrentClient] = useState<Client | null>(null);
     const [startDate, setStartDate] = useState<Dayjs | null>(null);
     const [endDate, setEndDate] = useState<Dayjs | null>(null);
-    const [date, setDate] = useState<Dayjs | null>(dayjs());
+    const [date, setDate] = useState<Dayjs | null>(null);
     const [isConfirming, setIsConfirming] = useState(false);
 
     const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -34,13 +34,13 @@ export const CareClientScreen = () => {
             return;
         }
 
-        setAvailableSlots(
-            getAvailableSlots({
-                providerId: currentClient.primaryProviderId,
-                date,
-                durationInMinutes: SLOT_DURATION_IN_MINUTES,
-            }),
-        );
+        const result = getAvailableSlots({
+            providerId: currentClient.primaryProviderId,
+            date,
+            durationInMinutes: SLOT_DURATION_IN_MINUTES,
+        });
+
+        setAvailableSlots(result);
     }, [currentClient?.id, currentClient?.primaryProviderId, date, getAvailableSlots]);
 
     useEffect(() => {
@@ -82,24 +82,11 @@ export const CareClientScreen = () => {
             startDate,
             endDate,
         });
-        setReservations(getClientReservationsByProvider(currentClient.id, currentClient.primaryProviderId));
-        setAvailableSlots(
-            getAvailableSlots({
-                providerId: currentClient.primaryProviderId,
-                date,
-                durationInMinutes: SLOT_DURATION_IN_MINUTES,
-            }),
-        );
+        setStartDate(null);
+        setEndDate(null);
+        setDate(null);
         setIsConfirming(false);
-    }, [
-        currentClient,
-        startDate,
-        endDate,
-        date,
-        getAvailableSlots,
-        getClientReservationsByProvider,
-        addProviderReservation,
-    ]);
+    }, [currentClient, startDate, endDate, date, addProviderReservation]);
 
     const onCancel = useCallback(() => {
         setIsConfirming(false);
@@ -133,7 +120,7 @@ export const CareClientScreen = () => {
                 label="Date"
                 openTo="day"
                 views={['day']}
-                value={date ?? dayjs()}
+                value={date}
                 format="YYYY-MM-DD"
                 onChange={(value) => setDate(value)}
             />
