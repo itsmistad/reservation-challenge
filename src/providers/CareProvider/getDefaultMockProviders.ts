@@ -1,6 +1,5 @@
 import { Provider, ProviderSchedule } from './types';
 import dayjs from 'dayjs';
-import { v4 as uuid } from 'uuid';
 
 export const getDefaultMockProviders = (): Provider[] => {
     const availability: ProviderSchedule['availability'] = [];
@@ -14,7 +13,7 @@ export const getDefaultMockProviders = (): Provider[] => {
 
     return [
         {
-            id: uuid(),
+            id: '25ac8771-a325-495f-a746-6f2dea1a73e1',
             firstName: 'Jane',
             lastName: 'Doe',
             schedule: {

@@ -9,8 +9,5 @@
         "titleBar.activeForeground": "#fff",
         "titleBar.inactiveForeground": "#fff"
     },
-    "files.exclude": {
-        "**/node_modules": true
-    },
     "typescript.tsdk": "node_modules/typescript/lib"
 }
